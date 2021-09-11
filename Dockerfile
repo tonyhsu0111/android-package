@@ -64,6 +64,8 @@ RUN yes | sdkmanager "build-tools;29.0.3"
 ENV TW=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TW /etc/localtime && echo $TW > /etc/timezone
 
+RUN mkdir -p /app
+
 RUN mkdir -p /tmp 
 WORKDIR /tmp
 
