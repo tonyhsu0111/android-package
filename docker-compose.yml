@@ -1,0 +1,18 @@
+version: "3.7"
+
+services:
+  android-package:
+    #build: ./
+    build:
+      context: ./
+      dockerfile: Dockerfile
+#      dockerfile: Dockerfile.gradle
+#    image: mingc/android-build-box:latest
+    image: tonyhsu0111/android-package:latest
+    hostname: android-package
+    container_name: android-package
+    command: "./gradlew assembleRelease"
+    privileged: true
+    volumes:
+      - ./redshark_android:/tmp/
+

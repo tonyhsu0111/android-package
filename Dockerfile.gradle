@@ -1,0 +1,53 @@
+FROM gradle:6.9.1
+MAINTAINER Tony_Hsu
+
+ENV ANDROID_SDK_ROOT /opt/android-sdk-linux
+# Preserved for backwards compatibility
+ENV ANDROID_HOME /opt/android-sdk-linux
+
+
+USER root
+
+# Dependencies to execute Android builds
+RUN apt-get update -qq
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y curl net-tools make bc tzdata git jq wget 
+
+
+# Default sh to bash
+RUN echo "dash dash/sh boolean false" | debconf-set-selections
+RUN DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
+# ------------------------------------------------------
+# --- Download Android Command line Tools into $ANDROID_SDK_ROOT
+
+RUN cd /opt \
+    && wget -q https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip -O android-commandline-tools.zip \
+    && mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools \
+    && unzip -q android-commandline-tools.zip -d /tmp/ \
+    && mv /tmp/cmdline-tools/ ${ANDROID_SDK_ROOT}/cmdline-tools/latest \
+    && rm android-commandline-tools.zip && ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest/
+
+ENV PATH ${PATH}:${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
+
+RUN yes | sdkmanager --licenses
+
+RUN touch /root/.android/repositories.cfg
+
+# Emulator and Platform tools
+RUN yes | sdkmanager "emulator" "platform-tools"
+
+RUN yes | sdkmanager --update --channel=3
+# Please keep all sections in descending order!
+RUN yes | sdkmanager \
+    "platforms;android-30" \
+    "platforms;android-29" \
+    "build-tools;30.0.3" \
+    "build-tools;29.0.3"
+
+#Time
+ENV TW=Asia/Taipei
+RUN ln -snf /usr/share/zoneinfo/$TW /etc/localtime && echo $TW > /etc/timezone
+
+RUN mkdir -p /tmp
+WORKDIR /tmp
+
